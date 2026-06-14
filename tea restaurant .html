@@ -1,0 +1,755 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Thattukada Tycoon Advance Business v4.6</title>
+    <style>
+        :root {
+            --bg: #160f0b;
+            --panel: #2d1f16;
+            --wood: #6e4726;
+            --accent: #f39c12;
+            --text: #fff;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --blue: #2980b9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #231710;
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-left: 2px solid #000;
+            border-right: 2px solid #000;
+        }
+
+        header {
+            padding: 10px 14px;
+            background: #1e140e;
+            border-bottom: 3px solid var(--wood);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 50; 
+        }
+
+        .cash-display {
+            font-size: 1.7rem;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+
+        .time-box {
+            background: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #f1c40f;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 0.95rem;
+            border: 1px solid #333;
+        }
+
+        .status-toggle {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.75rem;
+            box-shadow: 0 3px rgba(0,0,0,0.4);
+        }
+        .status-open { background: var(--success); color: white; }
+        .status-closed { background: var(--danger); color: white; }
+
+        #customer-section {
+            height: 145px;
+            background: #241911;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 8px;
+            padding-top: 35px; 
+            border-bottom: 3px solid #000;
+            position: relative;
+            z-index: 10;
+        }
+
+        .chair-slot {
+            background: #1a110b;
+            border: 2px dashed #554033;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 6px;
+            cursor: pointer;
+        }
+
+        .customer {
+            width: 48px;
+            height: 55px;
+            background: var(--blue);
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: inset 0 -8px 0 rgba(0,0,0,0.2);
+        }
+
+        .bubble {
+            position: absolute;
+            top: -32px; 
+            background: white;
+            color: black;
+            border-radius: 6px;
+            padding: 3px 2px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            text-align: center;
+            width: 95px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            z-index: 20;
+        }
+        .bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0;
+            border-style: solid;
+            border-color: white transparent;
+        }
+
+        .money-drop {
+            font-size: 2.2rem;
+            animation: bounce 0.4s infinite alternate;
+            padding-bottom: 12px;
+        }
+
+        #kitchen-area {
+            background: #3a281d;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .kitchen-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .stove-box {
+            width: 100px;
+            height: 100px;
+            background: #111;
+            border-radius: 12px;
+            border: 4px solid #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .stove-box.burning { border-color: var(--danger); background: #2b0c0c; }
+        .stove-box.boiling .pot { animation: shake 0.1s infinite; }
+        .stove-status { font-size: 0.65rem; font-weight: bold; margin-top: 4px; color: #888; }
+        .stove-box.burning .stove-status { color: var(--danger); }
+        .pot { font-size: 2.2rem; z-index: 2; }
+        .fire-fx { display: none; position: absolute; bottom: 8px; font-size: 1.2rem; }
+        .stove-box.burning .fire-fx { display: block; animation: bounce 0.2s infinite alternate; }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            100% { transform: translate(-1px, -1px) rotate(1deg); }
+        }
+
+        .ingredients-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .btn-action {
+            color: #fff;
+            background: var(--panel);
+            border: 2px solid var(--wood);
+            border-radius: 8px;
+            padding: 10px 2px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px rgba(0,0,0,0.3);
+        }
+        .btn-action:active { transform: translateY(2px); box-shadow: none; }
+
+        .pot-monitor {
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            border-left: 4px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trash-bin {
+            background: #c0392b;
+            border: 2px solid #962d22;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        footer {
+            height: 85px;
+            background: #19110b;
+            border-top: 3px solid var(--wood);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 40;
+        }
+
+        .computer-icon-btn {
+            background: #2c3e50;
+            border: 2px solid #34495e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px #1a252f;
+        }
+
+        .refund-btn {
+            background: #7f8c8d;
+            border: 2px solid #95a5a6;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px #616a6b;
+        }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1c2833;
+            width: 100%;
+            max-width: 390px;
+            border-radius: 12px;
+            border: 3px solid #3498db;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .shop-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #3498db;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 6px;
+        }
+
+        .shop-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.06);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .buy-mini-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .buy-mini-btn:disabled { background: #444; cursor: not-allowed; }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2c3e50;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+        }
+        .price-btn-group { display: flex; gap: 4px; }
+        .price-btn-group button { width: 24px; height: 24px; font-weight: bold; background: var(--accent); border: none; border-radius: 3px; cursor: pointer; }
+
+        .close-modal-btn {
+            background: var(--danger); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+
+        .report-title { color: #f1c40f; font-size: 1.4rem; text-align: center; font-weight: bold; margin-bottom: 5px; }
+        .report-line { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #34495e; font-size: 0.9rem;}
+
+        .floating-text {
+            position: absolute; font-weight: bold; animation: floatUp 1s forwards; pointer-events: none; z-index: 105;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <header>
+            <div>
+                <div class="cash-display" id="dsp-cash">$20.00</div>
+                <div class="time-box" id="dsp-time">08:00 AM</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                <button id="btn-toggle-status" class="status-toggle status-open" onclick="toggleShopOpenStatus()">SHOP: OPEN</button>
+                <div style="font-size: 0.65rem; color: #aaa;">Max Limit: 50</div>
+            </div>
+        </header>
+
+        <div id="customer-section">
+            <div class="chair-slot" id="chair-0" onclick="selectChairIndex(0)"></div>
+            <div class="chair-slot" id="chair-1" onclick="selectChairIndex(1)"></div>
+            <div class="chair-slot" id="chair-2" onclick="selectChairIndex(2)"></div>
+            <div class="chair-slot" id="chair-3" onclick="selectChairIndex(3)"></div>
+        </div>
+
+        <div id="kitchen-area">
+            <div class="kitchen-row">
+                <div id="stove" class="stove-box" onclick="interactStove()">
+                    <div class="pot" id="pot-graphic">⚱️</div>
+                    <div class="fire-fx">🔥🔥</div>
+                    <div class="stove-status" id="dsp-stove-state">GAS OFF</div>
+                </div>
+
+                <div class="ingredients-grid">
+                    <button class="btn-action" style="background:#5c4033; border-color:#422e24;" onclick="addIngredient('tea')">🍵 Tea P.<br>(<span id="stk-tea">10</span>/50)</button>
+                    <button class="btn-action" style="background:#3d2314; border-color:#29170d;" onclick="addIngredient('coffee')">🟤 Coffee P.<br>(<span id="stk-coffee">10</span>/50)</button>
+                    <button class="btn-action" style="background:#704214; border-color:#52300e;" onclick="addIngredient('chocolate')">🍫 Choc P.<br>(<span id="stk-chocolate">10</span>/50)</button>
+                </div>
+            </div>
+
+            <div class="kitchen-row">
+                <button class="btn-action" style="width: 100px; background: #27ae60; border-color:#1e7e43;" onclick="addIngredient('sugar')">🍬 Sugar (<span id="stk-sugar">10</span>)</button>
+                <button class="btn-action" style="width: 100px; background: #2980b9; border-color:#1f618d;" onclick="addIngredient('water')">💧 Water (<span id="stk-water">10</span>)</button>
+                <button class="btn-action" style="flex: 1; background: #d35400; border-color:#b34700; font-size:0.85rem;" onclick="serveDrink()">📦 SERVE SEAT</button>
+            </div>
+
+            <div class="pot-monitor">
+                <div>
+                    <strong style="color: var(--accent); font-size: 0.75rem;">Pot Mix:</strong>
+                    <div id="dsp-pot-contents" style="margin-top: 2px; color: #ddd; font-size: 0.75rem;">Empty pot.</div>
+                </div>
+                <button class="trash-bin" onclick="trashBadMix()">🗑️</button>
+            </div>
+        </div>
+
+        <footer>
+            <button class="refund-btn" onclick="kickAngryCustomer()">💸 Refund Chair</button>
+            <button class="computer-icon-btn" onclick="document.getElementById('computer-modal').style.display = 'flex'">
+                <span>🖥️ COMPUTER</span>
+                <span style="font-size: 0.65rem; color: #3498db;">Prices & Shop</span>
+            </button>
+        </footer>
+
+        <div id="computer-modal" class="modal">
+            <div class="modal-content">
+                <div class="shop-header">
+                    <span>🖥️ TEA STALL MANAGEMENT</span>
+                    <button class="close-modal-btn" onclick="document.getElementById('computer-modal').style.display = 'none'">X Close</button>
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:4px; padding-bottom:6px; border-bottom:1px solid #333;">
+                    <span style="font-size:0.75rem; color:var(--accent); font-weight:bold;">SET CUSTOMER RETAIL PRICES:</span>
+                    <div class="price-row">
+                        <span>🍵 Normal Tea Price: <strong id="p-tea-val">$4.00</strong></span>
+                        <div class="price-btn-group">
+                            <button onclick="adjustItemPrice('Normal Tea', -0.50)">-</button><button onclick="adjustItemPrice('Normal Tea', 0.50)">+</button>
+                        </div>
+                    </div>
+                    <div class="price-row">
+                        <span>🟤 Coffee Price: <strong id="p-coffee-val">$5.00</strong></span>
+                        <div class="price-btn-group">
+                            <button onclick="adjustItemPrice('Coffee', -0.50)">-</button><button onclick="adjustItemPrice('Coffee', 0.50)">+</button>
+                        </div>
+                    </div>
+                    <div class="price-row">
+                        <span>🍫 Chocolate Tea Price: <strong id="p-choc-val">$6.00</strong></span>
+                        <div class="price-btn-group">
+                            <button onclick="adjustItemPrice('Chocolate Tea', -0.50)">-</button><button onclick="adjustItemPrice('Chocolate Tea', 0.50)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shop-card"><span>💧 Water Box (+10)</span><button class="buy-mini-btn" id="b-water" onclick="buyStock('water', 10, 3)">Buy $3</button></div>
+                <div class="shop-card"><span>🍬 Sugar Box (+10)</span><button class="buy-mini-btn" id="b-sugar" onclick="buyStock('sugar', 10, 2)">Buy $2</button></div>
+                <div class="shop-card"><span>🍵 Tea Powder (+10)</span><button class="buy-mini-btn" id="b-tea" onclick="buyStock('tea', 10, 4)">Buy $4</button></div>
+                <div class="shop-card"><span>🟤 Coffee Powder (+10)</span><button class="buy-mini-btn" id="b-coffee" onclick="buyStock('coffee', 10, 5)">Buy $5</button></div>
+                <div class="shop-card"><span>🍫 Chocolate Powder (+10)</span><button class="buy-mini-btn" id="b-chocolate" onclick="buyStock('chocolate', 10, 6)">Buy $6</button></div>
+            </div>
+        </div>
+
+        <div id="report-modal" class="modal">
+            <div class="modal-content" style="border-color: var(--accent); max-width:350px;">
+                <div class="report-title">📋 DAILY BALANCE REPORT</div>
+                <div style="text-align:center; font-size:0.75rem; color:#aaa; margin-bottom:10px;">The shop closed automatically at 10:00 PM</div>
+                
+                <div class="report-line"><span>Total Daily Revenue:</span><span id="rep-revenue" style="color:var(--success); font-weight:bold;">$0.00</span></div>
+                <div class="report-line"><span>Stock Wholesaler Expense:</span><span id="rep-expense" style="color:var(--danger); font-weight:bold;">$0.00</span></div>
+                <hr style="border-color:#333;">
+                <div class="report-line" style="font-size:1.1rem; font-weight:bold;">
+                    <span>Net Profit / Loss:</span>
+                    <span id="rep-net">$0.00</span>
+                </div>
+
+                <button type="button" class="btn-action" style="background:var(--success); margin-top:15px; padding:12px; display:block; width:100%;" onclick="startNextDayBusiness()">☀️ START NEXT DAY</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let game = {
+            cash: 20.00,
+            isOpen: true,
+            prices: { 'Normal Tea': 4.00, 'Coffee': 5.00, 'Chocolate Tea': 6.00 },
+            stock: { water: 10, sugar: 10, tea: 10, coffee: 10, chocolate: 10 },
+            pot: { water: 0, boiled: false, sugar: 0, flavor: null },
+            stoveState: 'off', 
+            selectedChair: null,
+            hour: 8, minute: 0,
+            dailyRevenue: 0,
+            dailyExpense: 0
+        };
+
+        const MAX_LIMIT = 50; 
+        let chairs = [null, null, null, null];
+        const drinkNames = ['Normal Tea', 'Coffee', 'Chocolate Tea'];
+        const chairColors = ['#e67e22', '#9c27b0', '#e74c3c', '#1abc9c'];
+        let timerInterval = null;
+
+        window.onload = function() {
+            updateUI();
+            renderChairsDisplay();
+            timerInterval = setInterval(gameClockTick, 5000); 
+            setInterval(customerSpawnerLogic, 2500); 
+        };
+
+        function gameClockTick() {
+            game.minute += 15;
+            if (game.minute >= 60) { game.minute = 0; game.hour++; }
+            if (game.hour >= 22) { clearInterval(timerInterval); triggerEndOfDayReport(); }
+            updateClockUI();
+        }
+
+        function updateClockUI() {
+            let ampm = game.hour >= 12 ? 'PM' : 'AM';
+            let displayHour = game.hour % 12;
+            displayHour = displayHour ? displayHour : 12; 
+            let displayMin = game.minute < 10 ? '0' + game.minute : game.minute;
+            document.getElementById('dsp-time').innerText = `${displayHour}:${displayMin} ${ampm}`;
+        }
+
+        function triggerEndOfDayReport() {
+            game.isOpen = false;
+            document.getElementById('btn-toggle-status').innerText = "SHOP: CLOSED";
+            document.getElementById('btn-toggle-status').className = "status-toggle status-closed";
+            for(let i=0; i<4; i++) chairs[i] = null;
+            renderChairsDisplay();
+
+            document.getElementById('rep-revenue').innerText = `+$${game.dailyRevenue.toFixed(2)}`;
+            document.getElementById('rep-expense').innerText = `-$${game.dailyExpense.toFixed(2)}`;
+            
+            let net = game.dailyRevenue - game.dailyExpense;
+            let netBox = document.getElementById('rep-net');
+            if (net >= 0) {
+                netBox.innerText = `+$${net.toFixed(2)} Profit 📈`; netBox.style.color = "var(--success)";
+            } else {
+                netBox.innerText = `-$${Math.abs(net).toFixed(2)} Loss 📉`; netBox.style.color = "var(--danger)";
+            }
+            document.getElementById('report-modal').style.display = 'flex';
+        }
+
+        function startNextDayBusiness() {
+            game.hour = 8; game.minute = 0; game.dailyRevenue = 0; game.dailyExpense = 0; game.isOpen = true;
+            document.getElementById('btn-toggle-status').innerText = "SHOP: OPEN";
+            document.getElementById('btn-toggle-status').className = "status-toggle status-open";
+            document.getElementById('report-modal').style.display = 'none';
+            updateUI();
+            clearInterval(timerInterval); 
+            timerInterval = setInterval(gameClockTick, 5000); 
+        }
+
+        function toggleShopOpenStatus() {
+            game.isOpen = !game.isOpen;
+            if (game.isOpen) {
+                document.getElementById('btn-toggle-status').innerText = "SHOP: OPEN";
+                document.getElementById('btn-toggle-status').className = "status-toggle status-open";
+            } else {
+                document.getElementById('btn-toggle-status').innerText = "SHOP: CLOSED";
+                document.getElementById('btn-toggle-status').className = "status-toggle status-closed";
+                for(let i=0; i<4; i++) { if(chairs[i] && chairs[i].state === 'waiting') chairs[i] = null; }
+                renderChairsDisplay();
+            }
+        }
+
+        function adjustItemPrice(item, change) {
+            game.prices[item] = Math.max(1.00, game.prices[item] + change);
+            updateUI();
+        }
+
+        function customerSpawnerLogic() {
+            if (!game.isOpen) return;
+            let emptySlots = [];
+            for(let i=0; i<4; i++) { if (chairs[i] === null) emptySlots.push(i); }
+
+            if (emptySlots.length > 0 && Math.random() > 0.3) {
+                let pickedSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+                let randomDrink = drinkNames[Math.floor(Math.random() * drinkNames.length)];
+                let currentCharge = game.prices[randomDrink];
+                let maxTolerance = (randomDrink === 'Normal Tea' ? 6.00 : (randomDrink === 'Coffee' ? 7.50 : 8.50));
+                
+                if (currentCharge > maxTolerance) {
+                    setTimeout(() => {
+                        let targetChair = document.getElementById(`chair-${pickedSlot}`);
+                        if(targetChair) triggerTextFx(targetChair, "Price too high! 😡", "var(--danger)");
+                    }, 300);
+                    return; 
+                }
+                let skipSugar = Math.random() > 0.5;
+                chairs[pickedSlot] = { drink: randomDrink, wantsSugar: !skipSugar, state: 'waiting' };
+                renderChairsDisplay(); 
+            }
+        }
+
+        function interactStove() {
+            if (game.stoveState === 'off') {
+                game.stoveState = 'on';
+                document.getElementById('stove').classList.add('burning');
+                if (game.pot.water > 0 && !game.pot.boiled) startBoilingProcess();
+            } else {
+                game.stoveState = 'off';
+                document.getElementById('stove').classList.remove('burning', 'boiling');
+            }
+            updateUI();
+        }
+
+        function startBoilingProcess() {
+            game.stoveState = 'boiling';
+            document.getElementById('stove').classList.add('boiling');
+            setTimeout(() => {
+                if (game.stoveState === 'boiling' && game.pot.water > 0) {
+                    game.pot.boiled = true;
+                    triggerTextFx(document.getElementById('stove'), "Boiled! 💨", "var(--success)");
+                }
+                updateUI();
+            }, 2000);
+        }
+
+        function addIngredient(type) {
+            if (type === 'water') {
+                if (game.pot.water >= 1) return;
+                if (game.stock.water <= 0) return;
+                game.stock.water--; game.pot.water++;
+                if (game.stoveState === 'on') startBoilingProcess();
+            } else if (type === 'sugar') {
+                if (game.stock.sugar <= 0) return;
+                game.stock.sugar--; game.pot.sugar++;
+            } else {
+                if (game.stock[type] <= 0) return;
+                if (game.pot.flavor !== null) return;
+                game.stock[type]--; game.pot.flavor = type;
+            }
+            updateUI();
+        }
+
+        function trashBadMix() {
+            if(game.pot.water === 0 && game.pot.sugar === 0 && !game.pot.flavor) return;
+            game.pot = { water: 0, boiled: false, sugar: 0, flavor: null };
+            if (game.stoveState === 'boiling') game.stoveState = 'on';
+            document.getElementById('stove').classList.remove('boiling');
+            triggerTextFx(document.getElementById('stove'), "Dumped 🗑️", "var(--danger)");
+            updateUI();
+        }
+
+        function kickAngryCustomer() {
+            if(game.selectedChair === null || !chairs[game.selectedChair]) return;
+            if(game.cash >= 2.00) {
+                game.cash -= 2.00; game.dailyExpense += 2.00;
+                triggerTextFx(document.getElementById(`chair-${game.selectedChair}`), "-$2 Refund 💸", "var(--danger)");
+                chairs[game.selectedChair] = null; game.selectedChair = null;
+                renderChairsDisplay(); updateUI();
+            }
+        }
+
+        function selectChairIndex(idx) {
+            if (chairs[idx] && chairs[idx].state === 'paid') { collectCustomerCash(idx); return; }
+            game.selectedChair = idx;
+            renderChairsDisplay(); 
+        }
+
+        function collectCustomerCash(idx) {
+            let itemType = chairs[idx].drink;
+            let finalPrice = game.prices[itemType];
+            game.cash += finalPrice; game.dailyRevenue += finalPrice;
+            triggerTextFx(document.getElementById(`chair-${idx}`), `+$${finalPrice.toFixed(2)}`, "var(--success)");
+            chairs[idx] = null;
+            if (game.selectedChair === idx) game.selectedChair = null;
+            renderChairsDisplay(); updateUI();
+        }
+
+        function serveDrink() {
+            if (game.selectedChair === null) return;
+            let targetCust = chairs[game.selectedChair];
+            if (!targetCust || targetCust.state !== 'waiting') return;
+            if (!game.pot.boiled) return;
+
+            let currentFlav = "";
+            if (game.pot.flavor === 'tea') currentFlav = 'Normal Tea';
+            if (game.pot.flavor === 'coffee') currentFlav = 'Coffee';
+            if (game.pot.flavor === 'chocolate') currentFlav = 'Chocolate Tea';
+
+            if (currentFlav !== targetCust.drink) { alert(`Wrong recipe! They asked ${targetCust.drink}.`); return; }
+            if ((targetCust.wantsSugar && game.pot.sugar === 0) || (!targetCust.wantsSugar && game.pot.sugar > 0)) { alert("Sugar level calculation error!"); return; }
+
+            targetCust.state = 'paid';
+            game.pot = { water: 0, boiled: false, sugar: 0, flavor: null };
+            if (game.stoveState === 'boiling') game.stoveState = 'on';
+            document.getElementById('stove').classList.remove('boiling');
+            renderChairsDisplay(); updateUI();
+        }
+
+        function buyStock(item, amount, price) {
+            if (game.stock[item] + amount > MAX_LIMIT) return;
+            if (game.cash >= price) {
+                game.cash -= price; game.dailyExpense += price; game.stock[item] += amount;
+                triggerTextFx(document.getElementById(`b-${item}`), `+${amount}`, "var(--success)");
+                updateUI();
+            }
+        }
+
+        function renderChairsDisplay() {
+            for (let i=0; i<4; i++) {
+                let slot = document.getElementById(`chair-${i}`);
+                if (!slot) continue; slot.innerHTML = '';
+                slot.style.background = (i === game.selectedChair) ? '#2c1a0e' : '#1a110b';
+                slot.style.borderColor = (i === game.selectedChair) ? 'var(--accent)' : '#554033';
+
+                if (chairs[i]) {
+                    let cData = chairs[i];
+                    if (cData.state === 'waiting') {
+                        slot.innerHTML = `
+                            <div class="bubble">${cData.drink}<br><span style="color:${cData.wantsSugar ? '#2ecc71':'#e74c3c'}">${cData.wantsSugar ? '($'+game.prices[cData.drink].toFixed(2)+')' : '($'+game.prices[cData.drink].toFixed(2)+' No Sug)'}</span></div>
+                            <div class="customer" style="background:${chairColors[i]}">👤</div>`;
+                    } else if (cData.state === 'paid') { slot.innerHTML = `<div class="money-drop">💰</div>`; }
+                } else { slot.innerHTML = `<span style="font-size:0.65rem; color:#444; margin-bottom:15px;">Seat ${i+1}</span>`; }
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('dsp-cash').innerText = `$${game.cash.toFixed(2)}`;
+            document.getElementById('p-tea-val').innerText = `$${game.prices['Normal Tea'].toFixed(2)}`;
+            document.getElementById('p-coffee-val').innerText = `$${game.prices['Coffee'].toFixed(2)}`;
+            document.getElementById('p-choc-val').innerText = `$${game.prices['Chocolate Tea'].toFixed(2)}`;
+            
+            document.getElementById('stk-water').innerText = game.stock.water;
+            document.getElementById('stk-sugar').innerText = game.stock.sugar;
+            document.getElementById('stk-tea').innerText = game.stock.tea;
+            document.getElementById('stk-coffee').innerText = game.stock.coffee;
+            document.getElementById('stk-chocolate').innerText = game.stock.chocolate;
+
+            document.getElementById('dsp-stove-state').innerText = game.stoveState === 'off' ? 'GAS OFF' : (game.stoveState === 'on' ? 'HEATING' : 'BOILING');
+            
+            let list = [];
+            if (game.pot.water > 0) list.push(`${game.pot.water} W (${game.pot.boiled ? 'Hot' : 'Cold'})`);
+            if (game.pot.sugar > 0) list.push(`${game.pot.sugar} Sugar`);
+            if (game.pot.flavor) list.push(`${game.pot.flavor.toUpperCase()}`);
+            document.getElementById('dsp-pot-contents').innerText = list.length > 0 ? list.join(' + ') : 'Empty pot.';
+
+            document.getElementById('b-water').disabled = (game.cash < 3 || game.stock.water >= MAX_LIMIT);
+            document.getElementById('b-sugar').disabled = (game.cash < 2 || game.stock.sugar >= MAX_LIMIT);
+            document.getElementById('b-tea').disabled = (game.cash < 4 || game.stock.tea >= MAX_LIMIT);
+            document.getElementById('b-coffee').disabled = (game.cash < 5 || game.stock.coffee >= MAX_LIMIT);
+            document.getElementById('b-chocolate').disabled = (game.cash < 6 || game.stock.chocolate >= MAX_LIMIT);
+        }
+
+        function triggerTextFx(target, text, color) {
+            const fx = document.createElement('div');
+            fx.className = 'floating-text'; fx.innerText = text; fx.style.color = color;
+            fx.style.left = `${target.offsetLeft + 5}px`; fx.style.top = `${target.offsetTop + 10}px`;
+            target.parentElement.appendChild(fx);
+            setTimeout(() => fx.remove(), 1200);
+        }
+    </script>
+</body>
+</html>
